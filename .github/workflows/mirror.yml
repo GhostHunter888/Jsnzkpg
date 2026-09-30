@@ -1,0 +1,43 @@
+name: Daily Mirror
+
+'on':
+  schedule:
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout target
+        uses: actions/checkout@v5
+        with:
+          ref: Jsnzkpg
+          fetch-depth: 1
+
+      - name: Save workflow
+        run: cp .github/workflows/mirror.yml /tmp/mirror.yml
+
+      - name: Download upstream
+        run: git clone --depth 1 --branch Jsnzkpg https://github.com/Jsnzkpg/Jsnzkpg.git /tmp/upstream
+
+      - name: Replace files
+        run: |
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a /tmp/upstream/. .
+          mkdir -p .github/workflows
+          cp /tmp/mirror.yml .github/workflows/mirror.yml
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Mirror upstream" || true
+
+      - name: Push
+        run: git push origin Jsnzkpg --force
