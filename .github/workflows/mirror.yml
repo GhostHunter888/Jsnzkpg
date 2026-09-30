@@ -1,0 +1,42 @@
+name: Daily Mirror
+
+'on':
+  schedule:
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: Jsnzkpg
+          fetch-depth: 0
+
+      - run: cp .github/workflows/mirror.yml /tmp/mirror.yml
+
+      - run: git remote add upstream https://github.com/Jsnzkpg/Jsnzkpg.git
+
+      - run: git fetch upstream Jsnzkpg
+
+      - run: git reset --hard upstream/Jsnzkpg
+
+      - run: git clean -fd
+
+      - run: mkdir -p .github/workflows
+
+      - run: cp /tmp/mirror.yml .github/workflows/mirror.yml
+
+      - run: git config user.name "github-actions[bot]"
+
+      - run: git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - run: git add .github/workflows/mirror.yml
+
+      - run: git diff --cached --quiet || git commit -m "Keep mirror workflow"
+
+      - run: git push origin Jsnzkpg --force
