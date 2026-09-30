@@ -19,16 +19,19 @@ jobs:
           ref: Jsnzkpg
           fetch-depth: 1
 
-      - name: Save workflow
+      - name: Backup workflow
         run: cp .github/workflows/mirror.yml /tmp/mirror.yml
 
-      - name: Download upstream
+      - name: Clone upstream
         run: git clone --depth 1 --branch Jsnzkpg https://github.com/Jsnzkpg/Jsnzkpg.git /tmp/upstream
 
-      - name: Replace files
+      - name: Sync files
         run: |
-          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-          cp -a /tmp/upstream/. .
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude='.github/workflows/mirror.yml' \
+            /tmp/upstream/ ./
+
           mkdir -p .github/workflows
           cp /tmp/mirror.yml .github/workflows/mirror.yml
 
